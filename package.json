@@ -1,0 +1,37 @@
+{
+  "name": "calendar",
+  "version": "0.0.1",
+  "author": "Artem Tarasov",
+  "scripts": {
+    "start": "npm run prod; npm run start:server",
+    "start:server": "node ./server/bin/www",
+    "dev": "npm run development",
+    "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "watch": "npm run development -- --watch",
+    "prod": "npm run production",
+    "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "ejs": "~2.5.7",
+    "express": "~4.16.0",
+    "http-errors": "~1.6.2",
+    "morgan": "~1.9.0"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.0.0",
+    "cross-env": "^5.2.0",
+    "css-loader": "^2.1.1",
+    "laravel-mix": "^4.0.15",
+    "moment": "^2.24.0",
+    "node-sass": "^4.11.0",
+    "normalize.css": "^8.0.1",
+    "react": "^16.8.6",
+    "react-custom-scroll": "^4.0.1",
+    "react-dom": "^16.8.6",
+    "sass-loader": "^7.1.0",
+    "simplebar-react": "^0.1.6"
+  },
+  "license": "MIT"
+}

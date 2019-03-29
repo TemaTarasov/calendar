@@ -1,0 +1,11 @@
+.idea
+node_modules
+
+public/js
+
+**/.DS_Store
+
+**/*.log
+
+**/-lock.json
+**/*.lock
