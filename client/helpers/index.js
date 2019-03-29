@@ -42,6 +42,32 @@ export function get(source, path, defaultValue) {
   return defaultValue;
 }
 
+export function set(source, path, value) {
+  if (typeof path !== 'string') {
+    path = String(path);
+  }
+
+  if (source && path) {
+    const parts = path.split('.');
+    const length = parts.length - 1;
+    let target = source;
+
+    for (let i = 0; i < length; i++) {
+      const part = parts[i];
+
+      if (target[part] === undefined || target[part] === null) {
+        target[part] = Number.isNaN(Number(parts[i + 1])) ? {} : [];
+      }
+
+      target = target[part];
+    }
+
+    target[parts[parts.length - 1]] = value;
+  }
+
+  return source;
+}
+
 export function bind(context, methonds) {
   if (context && !isEmpty(methonds)) {
     methonds.forEach(function (method) {

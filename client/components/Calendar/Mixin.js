@@ -12,5 +12,18 @@ export default function (Base) {
         day: _.day()
       };
     }
+
+    get content() {
+      const content = document.querySelector('.rcs-inner-container');
+      const { height } = content.getBoundingClientRect();
+      const { scrollTop, offsetTop } = content;
+
+      return {
+        content,
+        height,
+        scrollTop,
+        offsetTop
+      };
+    }
   }
 }

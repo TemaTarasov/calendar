@@ -51,13 +51,13 @@ export class Month extends Mixin(PureComponent) {
   }
 
   scrollToCenter() {
-    const content = document.querySelector('.rcs-inner-container');
+    const { content, offsetTop } = this.content;
 
     if (content) {
       const row = document.querySelector('.calendar-month-row[data-current="true"]');
 
       if (row) {
-        content.scrollTo(0, row.offsetTop);
+        content.scrollTo(0, row.offsetTop - offsetTop);
 
         this.busy = false;
       }
@@ -87,12 +87,13 @@ export class Month extends Mixin(PureComponent) {
       scrolling: true
     });
 
-    const content = document.querySelector('.rcs-inner-container');
+    const { scrollTop, offsetTop } = this.content;
 
     const rows = document.querySelectorAll('.calendar-month-row');
     const last = rows[rows.length - this.ROWS];
+    const offset = last.offsetTop - offsetTop;
 
-    if (content.scrollTop === 0 || content.scrollTop === last.offsetTop || content.scrollTop > last.offsetTop) {
+    if (scrollTop === 0 || scrollTop === offset || scrollTop > offset) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -113,11 +114,11 @@ export class Month extends Mixin(PureComponent) {
   }
 
   handleScrollFunction() {
-    const content = document.querySelector('.rcs-inner-container');
+    const { content, scrollTop, offsetTop } = this.content;
     const item = content.getBoundingClientRect().height / this.ROWS;
     const half = item / 2;
 
-    const position = content.scrollTop;
+    const position = scrollTop;
     const diff = position % item;
 
     let result;
@@ -133,7 +134,9 @@ export class Month extends Mixin(PureComponent) {
       .map(item => item.parentElement);
 
     const last = rows[rows.length - 2];
-    if (result === 0 || result === last.offsetTop || result === (last.offsetTop - .5) || result > last.offsetTop) {
+    const offset = last.offsetTop - offsetTop;
+
+    if (result === 0 || result === offset || result === (offset - .5) || result > offset) {
       this.handleView(this.state, result === 0 ? 'decrement' : 'increment');
     } else {
       this.busy = true;
@@ -250,22 +253,34 @@ export class Month extends Mixin(PureComponent) {
     const { current, view, scrolling } = this.state;
 
     return (
-      <Scroll allowOuterScroll={true}
-              heightRelativeToParent="100%"
-              flex="1"
-              onScroll={this.handleScroll}
-      >
-        {
-          this.data.map((item, key) => (
-            <MonthRow data={item}
-                      current={current}
-                      view={view}
-                      scrolling={this.ready ? scrolling : false}
-                      key={key}
-            />
-          ))
-        }
-      </Scroll>
+      <div className="calendar-month">
+        <div className="calendar-month-display"/>
+
+        <div className="calendar-month-days">
+          {
+            moment.weekdaysShort().map((item, key) => (
+              <div className="calendar-month-days-item" key={key}>{item}</div>
+            ))
+          }
+        </div>
+
+        <Scroll allowOuterScroll={true}
+                heightRelativeToParent="100%"
+                flex="1"
+                onScroll={this.handleScroll}
+        >
+          {
+            this.data.map((item, key) => (
+              <MonthRow data={item}
+                        current={current}
+                        view={view}
+                        scrolling={this.ready ? scrolling : false}
+                        key={key}
+              />
+            ))
+          }
+        </Scroll>
+      </div>
     );
   }
 }

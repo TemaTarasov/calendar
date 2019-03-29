@@ -1,4 +1,40 @@
 .calendar-month {
+  display: flex;
+  flex-direction: column;
+
   width: 100%;
   height: 100%;
+
+  &-display {
+    flex-shrink: 0;
+
+    height: 40px;
+
+    padding: 8px;
+    font-size: 32px;
+    font-weight: 700;
+
+    span {
+      margin-left: 10px;
+    }
+  }
+
+  &-days {
+    display: flex;
+    flex-shrink: 0;
+
+    width: 100%;
+    height: 40px;
+
+    &-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      padding: 0 8px;
+      width: calc(100% / 7);
+
+      border-bottom: 1px solid rgba(0, 0, 0, .25);
+    }
+  }
 }

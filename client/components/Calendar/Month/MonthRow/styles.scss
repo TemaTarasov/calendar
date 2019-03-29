@@ -9,12 +9,12 @@
   &-highlight {
     position: absolute;
 
-    padding: 5px;
+    padding: 8px;
     top: -20px;
-    left: 10px;
+    left: 5px;
 
     font-size: 32px;
-    font-weight: 600;
+    font-weight: 700;
 
     border-radius: 6px;
     background-color: rgba(245, 245, 245, .3);
@@ -24,11 +24,23 @@
 
     z-index: 20;
 
+    > div {
+      position: sticky;
+
+      top: 20px;
+    }
+
     span {
       margin-left: 10px;
     }
 
     &[data-show="true"] {
+      opacity: 1;
+    }
+
+    &--fixed {
+      position: fixed;
+
       opacity: 1;
     }
   }

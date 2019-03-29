@@ -1,79 +1,172 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 import './styles.scss';
 
 import * as moment from 'moment';
-import { getBlock, isEmpty } from '../../../../helpers';
 
-function isHighlight(item, props) {
-  const { view } = props;
+import Mixin from '../../Mixin';
+import { set, bind, getBlock, isEmpty } from '../../../../helpers';
 
-  return item.year === view.year &&
-    item.month === view.month
-}
+export class MonthRow extends Mixin(PureComponent) {
+  constructor(props) {
+    super(props);
 
-function isMonthStart(item) {
-  return item.date === 1;
-}
-
-function getMonth({ month }) {
-  return (
-    <div className="calendar-month-row-item-month">
-      {
-        moment.monthsShort()[month]
+    this.state = {
+      month: {
+        className: ''
       }
-    </div>
-  );
-}
+    };
 
-function getHighlight(flag) {
-  return (
-    <div className="calendar-month-row-highlight" data-show={flag}>
-      {moment.months()[this.month]}
+    this.row = React.createRef();
 
-      <span>{this.year}</span>
-    </div>
-  );
-}
+    bind(this, [
+      'handleScroll'
+    ]);
+  }
 
-export function MonthRow(props) {
-  const { data, view, scrolling } = props;
-  const currentRow = data.some(item => item.year === view.year && item.month === view.month && item.date === 1);
-  const start = data.find(item => item.date === 1);
+  componentDidMount() {
+    const { content } = this.content;
 
-  return (
-    <div className="calendar-month-row" data-current={currentRow}>
-      {
-        getBlock(
-          !isEmpty(start),
-          getHighlight.bind(start, scrolling)
-        )
-      }
+    content.addEventListener('scroll', this.handleScroll);
+  }
 
-      {
-        data.map((col, key) => (
-          <div className="calendar-month-row-item"
-               key={key}
-               data-start={isMonthStart(col)}
-               data-highlight={isHighlight(col, props)}
-          >
-            <div className="calendar-month-row-item-date">
-              {
-                getBlock(
-                  isMonthStart(col),
-                  getMonth.bind(props, col)
-                )
+  componentWillUnmount() {
+    const { content } = this.content;
+
+    content.removeEventListener('scroll', this.handleScroll);
+  }
+
+  handleScroll() {
+    const { height, scrollTop, offsetTop } = this.content;
+    const offset = this.row.current.offsetTop - offsetTop;
+    const item = height / 6;
+
+    if (this.start) {
+      if (scrollTop > offset - item && scrollTop < (offset + (height - item))) {
+        if (offset > scrollTop) {
+          let value = (offset - scrollTop) * 2;
+
+          if (value < 106) {
+            this.setState({
+              month: {
+                className: 'calendar-month-row-highlight--fixed',
+                style: {
+                  top: `${value}px`
+                }
               }
-
-              {col.date}
-            </div>
-
-            <div className="calendar-month-row-item-content">
-
-            </div>
-          </div>
-
-        ))
+            });
+          } else {
+            this.setState({
+              month: {
+                className: '',
+                style: {}
+              }
+            });
+          }
+        } else {
+          this.setState({
+            month: {
+              className: 'calendar-month-row-highlight--fixed',
+              style: {
+                top: 0
+              }
+            }
+          });
+        }
+      } else {
+        this.setState({
+          month: {
+            className: '',
+            style: {}
+          }
+        });
       }
-    </div>
-  );
+    }
+  }
+
+  isHighlight(item) {
+    const { view } = this.props;
+
+    return item.year === view.year &&
+      item.month === view.month;
+  }
+
+  isMonthStart(item) {
+    return item.date === 1;
+  }
+
+  getMonth({ month }) {
+    return (
+      <div className="calendar-month-row-item-month">
+        {
+          moment.monthsShort()[month]
+        }
+      </div>
+    );
+  }
+
+  getHighlight(start, flag) {
+    const { month: { className, style } } = this.state;
+
+    return (
+      <div className={`calendar-month-row-highlight ${className}`} style={style} data-show={flag}>
+        {moment.months()[start.month]}
+
+        <span>{start.year}</span>
+      </div>
+    );
+  }
+
+  get isCurrentRow() {
+    const { data, view } = this.props;
+
+    return data.some(item => item.year === view.year && item.month === view.month && item.date === 1);
+  }
+
+  get start() {
+    const { data } = this.props;
+
+    return data.find(item => item.date === 1);
+  }
+
+  render() {
+    const { data, scrolling } = this.props;
+    const start = this.start;
+
+    return (
+      <div ref={this.row} className="calendar-month-row" data-current={this.isCurrentRow}>
+        {
+          getBlock(
+            !isEmpty(start),
+            this.getHighlight.bind(this, start, scrolling)
+          )
+        }
+
+        {
+          data.map((col, key) => (
+            <div className="calendar-month-row-item"
+                 key={key}
+                 data-start={this.isMonthStart(col)}
+                 data-highlight={this.isHighlight(col)}
+            >
+              <div className="calendar-month-row-item-date">
+                {
+                  getBlock(
+                    this.isMonthStart(col),
+                    this.getMonth.bind(this, col)
+                  )
+                }
+
+                {col.date}
+              </div>
+
+              <div className="calendar-month-row-item-content">
+
+              </div>
+            </div>
+
+          ))
+        }
+      </div>
+    );
+  }
 }
