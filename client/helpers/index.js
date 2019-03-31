@@ -100,6 +100,7 @@ export function debounce() {
 
 export function scrollToY(target, scrollTargetY, finish = function () {}) {
   let currentTime = 0;
+  const timeout = debounce();
   const scrollY = target.scrollTop;
   const speed = 1000;
   const ease = pos => Math.sin(pos * (Math.PI / 2));
@@ -117,9 +118,9 @@ export function scrollToY(target, scrollTargetY, finish = function () {}) {
 
       target.scrollTo(0, scrollY + ((scrollTargetY - scrollY) * t));
     } else {
-      finish();
-
       target.scrollTo(0, scrollTargetY);
+
+      timeout(finish);
     }
   })();
 }

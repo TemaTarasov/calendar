@@ -28,17 +28,19 @@ export class Month extends Mixin(PureComponent) {
     };
 
     this.ready = false;
-    this.busy = false;
+    this.busy = true;
 
     this.start = React.createRef();
 
     this.debounce = debounce();
     this.scrolling = debounce();
+    this.busyBound = debounce();
 
     bind(this, [
       'handleScroll',
       'handleScrollFunction',
-      'handleView'
+      'handleView',
+      'scrollToCenter'
     ]);
   }
 
@@ -50,72 +52,72 @@ export class Month extends Mixin(PureComponent) {
     });
   }
 
+  get current() {
+    return document.querySelector('.calendar-month-row[data-current="true"]');
+  }
+
+  get last() {
+    const { offsetTop } = this.content;
+    const current = this.current;
+    const items = [].slice
+      .call(document.querySelectorAll('.calendar-month-row-item[data-start="true"]'))
+      .map(item => item.parentElement);
+    const target = items[items.indexOf(current) + 1];
+
+    return target.offsetTop - offsetTop;
+  }
+
   scrollToCenter() {
     const { content, offsetTop } = this.content;
 
     if (content) {
-      const row = document.querySelector('.calendar-month-row[data-current="true"]');
+      const current = this.current;
 
-      if (row) {
-        content.scrollTo(0, row.offsetTop - offsetTop);
+      if (current) {
+        const value = current.offsetTop - offsetTop;
 
-        this.busy = false;
+        content.scrollTo(0, value);
+        this.clearBusy();
       }
     }
   }
 
   handleView(state, type) {
-    if (!this.busy) {
-      if (['increment', 'decrement'].includes(type)) {
-        this.busy = true;
-        const { view: { year, month } } = state;
-        const amount = (this.settings.range) * (type === 'increment' ? -1 : 1);
+    if (['increment', 'decrement'].includes(type)) {
+      const { view: { year, month } } = state;
+      const amount = (this.settings.range) * (type === 'increment' ? -1 : 1);
 
-        this.setState({
-          view: this._date(moment(`${year} ${+month + 1}`).subtract(amount, 'month'))
-        }, () => {
-          this.forceUpdate();
+      this.setState({
+        view: this._date(moment(`${year} ${+month + 1}`).subtract(amount, 'month'))
+      }, () => {
+        this.forceUpdate();
 
-          this.scrollToCenter();
-        });
-      }
+        this.scrollToCenter();
+      });
     }
   }
 
-  handleScroll(event) {
+  handleScroll() {
     this.setState({
       scrolling: true
-    });
-
-    const { scrollTop, offsetTop } = this.content;
-
-    const rows = document.querySelectorAll('.calendar-month-row');
-    const last = rows[rows.length - this.ROWS];
-    const offset = last.offsetTop - offsetTop;
-
-    if (scrollTop === 0 || scrollTop === offset || scrollTop > offset) {
-      event.preventDefault();
-      event.stopPropagation();
-
+    }, () => {
       if (!this.busy) {
-        this.handleScrollFunction();
-
-        this.debounce();
+        this.debounce(this.handleScrollFunction, 300);
       }
-    } else {
-      this.debounce(this.handleScrollFunction, 100);
-    }
 
-    this.scrolling(() => {
-      this.setState({
-        scrolling: false
-      });
-    }, 100);
+      this.scrolling(() => {
+        this.setState({
+          scrolling: false
+        });
+      }, 150);
+    });
   }
 
   handleScrollFunction() {
-    const { content, scrollTop, offsetTop } = this.content;
-    const item = content.getBoundingClientRect().height / this.ROWS;
+    this.busy = true;
+
+    const { content, height, scrollTop } = this.content;
+    const item = height / this.ROWS;
     const half = item / 2;
 
     const position = scrollTop;
@@ -129,21 +131,22 @@ export class Month extends Mixin(PureComponent) {
       result = position + (item - diff);
     }
 
-    const rows = [].slice
-      .call(document.querySelectorAll('.calendar-month-row-item[data-start="true"'))
-      .map(item => item.parentElement);
+    scrollToY(content, result, () => {
+      const { scrollTop } = this.content;
+      const last = this.last;
 
-    const last = rows[rows.length - 2];
-    const offset = last.offsetTop - offsetTop;
+      if (scrollTop === 0 || scrollTop === last || scrollTop > last) {
+        this.handleView(this.state, scrollTop === 0 ? 'decrement' : 'increment');
+      } else {
+        this.clearBusy();
+      }
+    });
+  }
 
-    if (result === 0 || result === offset || result === (offset - .5) || result > offset) {
-      this.handleView(this.state, result === 0 ? 'decrement' : 'increment');
-    } else {
-      this.busy = true;
-      scrollToY(content, result, () => {
-        this.busy = false
-      });
-    }
+  clearBusy() {
+    this.busyBound(() => {
+      this.busy = false;
+    }, 150);
   }
 
   _generate(year, month, days) {
