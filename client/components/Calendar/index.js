@@ -18,11 +18,11 @@ export class Calendar extends Mixin(PureComponent) {
   }
 
   render() {
-    const { current, mode } = this.state;
+    const { current, view, mode } = this.state;
 
     if (mode === 'month') {
       return (
-        <Month current={current}/>
+        <Month current={current} view={view}/>
       );
     }
 

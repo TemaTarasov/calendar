@@ -17,13 +17,9 @@ export class Month extends Mixin(PureComponent) {
     this.ROWS = 6;
     this.COLS = 7;
 
-    this.settings = {
-      range: 1
-    };
-
     this.state = {
       current: props.current,
-      view: props.current,
+      view: props.view,
       scrolling: false
     };
 
@@ -85,7 +81,7 @@ export class Month extends Mixin(PureComponent) {
   handleView(state, type) {
     if (['increment', 'decrement'].includes(type)) {
       const { view: { year, month } } = state;
-      const amount = (this.settings.range) * (type === 'increment' ? -1 : 1);
+      const amount = type === 'increment' ? -1 : 1;
 
       this.setState({
         view: this._date(moment(`${year} ${+month + 1}`).subtract(amount, 'month'))
@@ -172,9 +168,10 @@ export class Month extends Mixin(PureComponent) {
       const prevDay = prev.day();
 
       if (prevDay > 0) {
-        const prevYear = prev.year();
-        const prevMonth = prev.month();
-        const prevDays = prev.daysInMonth();
+        const _prev = moment(prev).subtract(1, 'month');
+        const prevYear = _prev.year();
+        const prevMonth = _prev.month();
+        const prevDays = _prev.daysInMonth();
 
         result = result.concat(
           new Array(prevDay)
@@ -187,32 +184,30 @@ export class Month extends Mixin(PureComponent) {
         );
       }
 
-      for (let i = months; i >= 1; i--) {
-        const _ = moment(data).subtract(i, 'month');
-        const year = _.year();
-        const month = _.month();
-        const days = _.daysInMonth();
+      const _ = moment(data).subtract(months, 'month');
+      const year = _.year();
+      const month = _.month();
+      const days = _.daysInMonth();
 
-        result = result.concat(this._generate(year, month, days));
-      }
+      result = result.concat(this._generate(year, month, days));
 
       return result;
     }
 
     if (type === 'increment') {
-      for (let i = 1; i <= months; i++) {
-        const _ = moment(data).subtract(i * -1, 'month');
-        const year = _.year();
-        const month = _.month();
-        const days = _.daysInMonth();
+      const _ = moment(data).subtract(months * -1, 'month');
+      const year = _.year();
+      const month = _.month();
+      const days = _.daysInMonth();
+      const day = _.day();
 
-        result = result.concat(this._generate(year, month, days));
-      }
+      result = result.concat(this._generate(year, month, days));
 
-      let next = moment(data).subtract((months + 1) * -1, 'month');
-
+      const _result = new Array(day).fill().concat(result);
       const items = this.ROWS * this.COLS;
-      if (result.length < items) {
+
+      if (_result.length < items) {
+        const next = moment(data).subtract((months + 1) * -1, 'month');
         const nextYear = next.year();
         const nextMonth = next.month();
 
@@ -241,11 +236,11 @@ export class Month extends Mixin(PureComponent) {
     const current = moment(`${year} ${+month + 1}`);
 
     const result = []
-      .concat(this.generate(current, this.settings.range, 'decrement'))
+      .concat(this.generate(current, 1, 'decrement'))
       .concat(this._generate(year, month, current.daysInMonth()))
-      .concat(this.generate(current, this.settings.range, 'increment'));
+      .concat(this.generate(current, 1, 'increment'));
 
-    return new Array(Math.round(result.length / cols))
+    return new Array(Math.floor(result.length / cols))
       .fill()
       .map((_, key) =>
         result.slice(key * cols, cols * (key + 1))

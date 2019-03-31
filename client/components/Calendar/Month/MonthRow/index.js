@@ -4,7 +4,7 @@ import './styles.scss';
 import * as moment from 'moment';
 
 import Mixin from '../../Mixin';
-import { set, bind, getBlock, isEmpty } from '../../../../helpers';
+import { bind, getBlock, isEmpty } from '../../../../helpers';
 
 export class MonthRow extends Mixin(PureComponent) {
   constructor(props) {
@@ -36,51 +36,59 @@ export class MonthRow extends Mixin(PureComponent) {
   }
 
   handleScroll() {
-    const { height, scrollTop, offsetTop } = this.content;
+    if (!this.start) {
+      return false;
+    }
+
+    let month = {};
+
+    const { scrollTop, offsetTop } = this.content;
+    const items = [].slice
+      .call(document.querySelectorAll('.calendar-month-row-item[data-start="true"]'))
+      .map(item => item.parentElement);
     const offset = this.row.current.offsetTop - offsetTop;
-    const item = height / 6;
+    const next = items[items.indexOf(this.row.current) + 1];
 
-    if (this.start) {
-      if (scrollTop > offset - item && scrollTop < (offset + (height - item))) {
-        if (offset > scrollTop) {
-          let value = (offset - scrollTop) * 2;
+    if (offset === scrollTop) {
+      month = {
+        className: 'calendar-month-row-highlight--fixed',
+        style: {
+          top: 0
+        }
+      };
+    } else if (offset > scrollTop) {
+      const value = (offset - scrollTop) * 1.5;
 
-          if (value < 106) {
-            this.setState({
-              month: {
-                className: 'calendar-month-row-highlight--fixed',
-                style: {
-                  top: `${value}px`
-                }
-              }
-            });
-          } else {
-            this.setState({
-              month: {
-                className: '',
-                style: {}
-              }
-            });
+      if (value < 190) {
+        month = {
+          className: 'calendar-month-row-highlight--fixed',
+          style: {
+            top: `${value}px`
           }
-        } else {
-          this.setState({
-            month: {
-              className: 'calendar-month-row-highlight--fixed',
-              style: {
-                top: 0
-              }
-            }
-          });
+        };
+      }
+    } else if (scrollTop > offset && scrollTop < next.offsetTop) {
+      const __VALUE = (offsetTop * 2) - 20;
+      const value = (next.offsetTop - scrollTop);
+
+      if (value <= __VALUE) {
+        month = {
+          className: 'calendar-month-row-highlight--fixed',
+          style: {
+            top: `${-__VALUE + value}px`
+          }
         }
       } else {
-        this.setState({
-          month: {
-            className: '',
-            style: {}
+        month = {
+          className: 'calendar-month-row-highlight--fixed',
+          style: {
+            top: 0
           }
-        });
+        };
       }
     }
+
+    this.setState({ month });
   }
 
   isHighlight(item) {
