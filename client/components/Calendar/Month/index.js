@@ -84,7 +84,7 @@ export class Month extends Mixin(PureComponent) {
       const amount = type === 'increment' ? -1 : 1;
 
       this.setState({
-        view: this._date(moment(`${year} ${+month + 1}`).subtract(amount, 'month'))
+        view: this._date(moment(`${year} ${+month + 1}`, 'YYYY M').subtract(amount, 'month'))
       }, () => {
         this.forceUpdate();
 
@@ -146,13 +146,17 @@ export class Month extends Mixin(PureComponent) {
   }
 
   _generate(year, month, days) {
-    return new Array(days)
-      .fill()
-      .map((_, key) => ({
+    const result = [];
+
+    for (let i = 1; i <= days; i++) {
+      result.push({
         year,
         month,
-        date: key + 1
-      }))
+        date: i
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -173,15 +177,13 @@ export class Month extends Mixin(PureComponent) {
         const prevMonth = _prev.month();
         const prevDays = _prev.daysInMonth();
 
-        result = result.concat(
-          new Array(prevDay)
-            .fill()
-            .map((_, key) => ({
-              year: prevYear,
-              month: prevMonth,
-              date: prevDays - (prevDay - (key + 1))
-            }))
-        );
+        for (let i = 1; i <= prevDay; i++) {
+          result.push({
+            year: prevYear,
+            month: prevMonth,
+            date: prevDays - (prevDay - i)
+          });
+        }
       }
 
       const _ = moment(data).subtract(months, 'month');
@@ -189,7 +191,7 @@ export class Month extends Mixin(PureComponent) {
       const month = _.month();
       const days = _.daysInMonth();
 
-      result = result.concat(this._generate(year, month, days));
+      result.push.apply(result, this._generate(year, month, days));
 
       return result;
     }
@@ -201,25 +203,24 @@ export class Month extends Mixin(PureComponent) {
       const days = _.daysInMonth();
       const day = _.day();
 
-      result = result.concat(this._generate(year, month, days));
+      result.push.apply(result, this._generate(year, month, days));
 
-      const _result = new Array(day).fill().concat(result);
+      const length = new Array(day).fill().concat(result).length;
       const items = this.ROWS * this.COLS;
 
-      if (_result.length < items) {
+      if (length < items) {
         const next = moment(data).subtract((months + 1) * -1, 'month');
         const nextYear = next.year();
         const nextMonth = next.month();
 
-        result = result.concat(
-          new Array(items - result.length)
-            .fill()
-            .map((_, key) => ({
-              year: nextYear,
-              month: nextMonth,
-              date: key + 1
-            }))
-        );
+        const state = items - result.length;
+        for (let i = 1; i <= state; i++) {
+          result.push({
+            year: nextYear,
+            month: nextMonth,
+            date: i
+          })
+        }
       }
 
       return result;
@@ -232,19 +233,20 @@ export class Month extends Mixin(PureComponent) {
     const cols = this.COLS;
 
     const { year, month } = this.state.view;
-
     const current = moment(`${year} ${+month + 1}`);
+    const result = [];
 
-    const result = []
-      .concat(this.generate(current, 1, 'decrement'))
-      .concat(this._generate(year, month, current.daysInMonth()))
-      .concat(this.generate(current, 1, 'increment'));
+    const items = [];
+    items.push.apply(items, this.generate(current, 1, 'decrement'));
+    items.push.apply(items, this._generate(year, month, current.daysInMonth()));
+    items.push.apply(items, this.generate(current, 1, 'increment'));
 
-    return new Array(Math.floor(result.length / cols))
-      .fill()
-      .map((_, key) =>
-        result.slice(key * cols, cols * (key + 1))
-      );
+    const state = Math.floor(items.length / cols);
+    for (let i = 0; i < state; i++) {
+      result.push(items.slice(i * cols, cols * (i + 1)));
+    }
+
+    return result;
   }
 
   render() {

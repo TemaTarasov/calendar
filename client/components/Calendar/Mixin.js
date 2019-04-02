@@ -2,7 +2,7 @@ import * as moment from 'moment';
 
 export default function (Base) {
   return class extends Base {
-    _date(value) {
+    _date(value, format) {
       const _ = moment(value);
 
       return {
