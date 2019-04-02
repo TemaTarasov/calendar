@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import Scroll from 'react-custom-scroll';
 import 'react-custom-scroll/dist/customScroll.css';
 
-import { bind, debounce, scrollToY } from '../../../helpers';
+import { bind, debounce, isEmpty, scrollToY, stringify } from '../../../helpers';
 import Mixin from '../Mixin';
 import { MonthRow } from './MonthRow';
 
@@ -31,6 +31,11 @@ export class Month extends Mixin(PureComponent) {
     this.debounce = debounce();
     this.scrolling = debounce();
     this.busyBound = debounce();
+
+    this.stash = {
+      view: null,
+      data: null
+    };
 
     bind(this, [
       'handleScroll',
@@ -230,9 +235,17 @@ export class Month extends Mixin(PureComponent) {
   }
 
   get data() {
-    const cols = this.COLS;
+    const { data } = this.stash;
 
-    const { year, month } = this.state.view;
+    const _view = this.stash.view;
+    const { view } = this.state;
+
+    if (!isEmpty(_view) && !isEmpty(data) && stringify(_view) === stringify(view)) {
+      return data;
+    }
+
+    const cols = this.COLS;
+    const { year, month } = view;
     const current = moment(`${year} ${+month + 1}`);
     const result = [];
 
@@ -246,10 +259,17 @@ export class Month extends Mixin(PureComponent) {
       result.push(items.slice(i * cols, cols * (i + 1)));
     }
 
+    this.stash = {
+      view,
+      data: result
+    };
+
     return result;
   }
 
   render() {
+    const { onRender } = this.props;
+
     const { current, view, scrolling } = this.state;
 
     return (
@@ -275,6 +295,7 @@ export class Month extends Mixin(PureComponent) {
                         current={current}
                         view={view}
                         scrolling={this.ready ? scrolling : false}
+                        onRender={onRender}
                         key={key}
               />
             ))

@@ -4,7 +4,7 @@ import './styles.scss';
 import * as moment from 'moment';
 
 import Mixin from '../../Mixin';
-import { bind, getBlock, isEmpty } from '../../../../helpers';
+import { bind, getBlock, isEmpty, stringify } from '../../../../helpers';
 
 export class MonthRow extends Mixin(PureComponent) {
   constructor(props) {
@@ -17,6 +17,11 @@ export class MonthRow extends Mixin(PureComponent) {
     };
 
     this.row = React.createRef();
+
+    this.stash = {
+      data: null,
+      items: null
+    };
 
     bind(this, [
       'handleScroll'
@@ -136,8 +141,52 @@ export class MonthRow extends Mixin(PureComponent) {
     return data.find(item => item.date === 1);
   }
 
+  get data() {
+    const _data = this.stash.data;
+    const { items } = this.stash;
+
+    if (!isEmpty(_data) && !isEmpty(items) && stringify(_data) === stringify(this.props.data)) {
+      return items;
+    }
+
+    const {
+      data,
+      onRender = () => null
+    } = this.props;
+
+    const result = data.map((col, key) => (
+      <div className="calendar-month-row-item"
+           key={key}
+           data-start={this.isMonthStart(col)}
+           data-highlight={this.isHighlight(col)}
+      >
+        <div className="calendar-month-row-item-date">
+          {
+            getBlock(
+              this.isMonthStart(col),
+              this.getMonth.bind(this, col)
+            )
+          }
+
+          {col.date}
+        </div>
+
+        <div className="calendar-month-row-item-content">
+          {/*{onRender(col)}*/}
+        </div>
+      </div>
+    ));
+
+    this.stash = {
+      data: this.props.data,
+      items: result
+    };
+
+    return result;
+  }
+
   render() {
-    const { data, scrolling } = this.props;
+    const { scrolling } = this.props;
     const start = this.start;
 
     return (
@@ -149,31 +198,7 @@ export class MonthRow extends Mixin(PureComponent) {
           )
         }
 
-        {
-          data.map((col, key) => (
-            <div className="calendar-month-row-item"
-                 key={key}
-                 data-start={this.isMonthStart(col)}
-                 data-highlight={this.isHighlight(col)}
-            >
-              <div className="calendar-month-row-item-date">
-                {
-                  getBlock(
-                    this.isMonthStart(col),
-                    this.getMonth.bind(this, col)
-                  )
-                }
-
-                {col.date}
-              </div>
-
-              <div className="calendar-month-row-item-content">
-
-              </div>
-            </div>
-
-          ))
-        }
+        {this.data}
       </div>
     );
   }

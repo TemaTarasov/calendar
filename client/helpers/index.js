@@ -136,3 +136,19 @@ export function getBlock(condition, Component) {
 
   return null;
 }
+
+export function stringify(source, size) {
+  let cache = [];
+
+  return JSON.stringify(source, function (key, value) {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.indexOf(value) !== -1) {
+        return;
+      }
+
+      cache.push(value);
+    }
+
+    return value;
+  }, size || 0);
+}
