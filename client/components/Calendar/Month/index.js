@@ -136,7 +136,7 @@ export class Month extends Mixin(PureComponent) {
       const { scrollTop } = this.content;
       const last = this.last;
 
-      if (scrollTop === 0 || scrollTop === last || scrollTop > last) {
+      if (scrollTop === 0 || [last, last - 1].includes(scrollTop) || scrollTop > last) {
         this.handleView(this.state, scrollTop === 0 ? 'decrement' : 'increment');
       } else {
         this.clearBusy();
@@ -246,7 +246,7 @@ export class Month extends Mixin(PureComponent) {
 
     const cols = this.COLS;
     const { year, month } = view;
-    const current = moment(`${year} ${+month + 1}`);
+    const current = moment(`${year} ${+month + 1}`, 'YYYY M');
     const result = [];
 
     const items = [];

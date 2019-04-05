@@ -4,7 +4,7 @@ import './styles.scss';
 import * as moment from 'moment';
 
 import Mixin from '../../Mixin';
-import { bind, getBlock, isEmpty, stringify } from '../../../../helpers';
+import { bind, getBlock, isEmpty, stringify, stopPropagation } from '../../../../helpers';
 
 export class MonthRow extends Mixin(PureComponent) {
   constructor(props) {
@@ -17,6 +17,7 @@ export class MonthRow extends Mixin(PureComponent) {
     };
 
     this.row = React.createRef();
+    this.highlight = React.createRef();
 
     this.stash = {
       data: null,
@@ -24,7 +25,8 @@ export class MonthRow extends Mixin(PureComponent) {
     };
 
     bind(this, [
-      'handleScroll'
+      'handleScroll',
+      'getHighlight'
     ]);
   }
 
@@ -47,7 +49,7 @@ export class MonthRow extends Mixin(PureComponent) {
 
     let month = {};
 
-    const { scrollTop, offsetTop } = this.content;
+    const { height, scrollTop, offsetTop } = this.content;
     const items = [].slice
       .call(document.querySelectorAll('.calendar-month-row-item[data-start="true"]'))
       .map(item => item.parentElement);
@@ -62,9 +64,12 @@ export class MonthRow extends Mixin(PureComponent) {
         }
       };
     } else if (offset > scrollTop) {
-      const value = (offset - scrollTop) * 1.5;
+      const value = (offset - scrollTop) * 1.35;
 
-      if (value < 190) {
+      const row = this.highlight.current.getBoundingClientRect().height;
+      const target = +((height / 6) + offsetTop - (+(row / 2).toFixed() + 2)).toFixed();
+
+      if (value < target) {
         month = {
           className: 'calendar-month-row-highlight--fixed',
           style: {
@@ -74,7 +79,7 @@ export class MonthRow extends Mixin(PureComponent) {
       }
     } else if (scrollTop > offset && scrollTop < next.offsetTop) {
       const __VALUE = (offsetTop * 2) - 20;
-      const value = (next.offsetTop - scrollTop);
+      const value = next.offsetTop - scrollTop;
 
       if (value <= __VALUE) {
         month = {
@@ -117,11 +122,13 @@ export class MonthRow extends Mixin(PureComponent) {
     );
   }
 
-  getHighlight(start, flag) {
+  getHighlight() {
+    const start = this.start;
+    const { scrolling } = this.props;
     const { month: { className, style } } = this.state;
 
     return (
-      <div className={`calendar-month-row-highlight ${className}`} style={style} data-show={flag}>
+      <div ref={this.highlight} className={`calendar-month-row-highlight ${className}`} style={style} data-show={scrolling}>
         {moment.months()[start.month]}
 
         <span>{start.year}</span>
@@ -155,7 +162,8 @@ export class MonthRow extends Mixin(PureComponent) {
     } = this.props;
 
     const result = data.map((col, key) => (
-      <div className="calendar-month-row-item"
+      <div ref={this.month}
+           className="calendar-month-row-item"
            key={key}
            data-start={this.isMonthStart(col)}
            data-highlight={this.isHighlight(col)}
@@ -171,8 +179,8 @@ export class MonthRow extends Mixin(PureComponent) {
           {col.date}
         </div>
 
-        <div className="calendar-month-row-item-content">
-          {/*{onRender(col)}*/}
+        <div className="calendar-month-row-item-content" onScroll={stopPropagation}>
+          {onRender(col)}
         </div>
       </div>
     ));
@@ -186,17 +194,11 @@ export class MonthRow extends Mixin(PureComponent) {
   }
 
   render() {
-    const { scrolling } = this.props;
     const start = this.start;
 
     return (
       <div ref={this.row} className="calendar-month-row" data-current={this.isCurrentRow}>
-        {
-          getBlock(
-            !isEmpty(start),
-            this.getHighlight.bind(this, start, scrolling)
-          )
-        }
+        {getBlock(!isEmpty(start), this.getHighlight)}
 
         {this.data}
       </div>

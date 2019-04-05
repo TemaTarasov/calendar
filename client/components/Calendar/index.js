@@ -19,9 +19,7 @@ export class Calendar extends Mixin(PureComponent) {
 
   render() {
     const {
-      onRender = function (date) {
-        console.log(date);
-      }
+      onRender = function () {}
     } = this.props;
     const { current, view, mode } = this.state;
 

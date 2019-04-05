@@ -10,7 +10,7 @@
     position: absolute;
 
     padding: 8px;
-    top: -20px;
+    top: -25px;
     left: 5px;
 
     font-size: 32px;
@@ -73,6 +73,7 @@
 
       transition: opacity .2s ease;
       z-index: 9999;
+      pointer-events: none;
     }
     &[data-highlight="true"]::after {
       opacity: 0;
@@ -96,6 +97,7 @@
       font-weight: 700;
     }
     &-content {
+      padding: 8px;
       margin: 0 -8px;
       height: 100%;
 

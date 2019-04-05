@@ -152,3 +152,7 @@ export function stringify(source, size) {
     return value;
   }, size || 0);
 }
+
+export function stopPropagation(event) {
+  event.stopPropagation();
+}
