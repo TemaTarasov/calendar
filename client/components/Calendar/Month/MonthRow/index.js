@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, memo } from 'react';
 import './styles.scss';
 
 import * as moment from 'moment';
@@ -161,6 +161,8 @@ export class MonthRow extends Mixin(PureComponent) {
       onRender = () => null
     } = this.props;
 
+    const Renderer = memo(onRender);
+
     const result = data.map((col, key) => (
       <div ref={this.month}
            className="calendar-month-row-item"
@@ -180,7 +182,7 @@ export class MonthRow extends Mixin(PureComponent) {
         </div>
 
         <div className="calendar-month-row-item-content" onScroll={stopPropagation}>
-          {onRender(col)}
+          <Renderer {...col}/>
         </div>
       </div>
     ));

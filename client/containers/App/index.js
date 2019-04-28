@@ -3,7 +3,15 @@ import './styles.scss';
 
 import { Calendar } from '../../components/Calendar';
 
-function onRender({ year, month, date }) {}
+function onRender({ year, month, date }) {
+  return (
+    <div>
+      <h2>{year}</h2>
+      <h1>{month}</h1>
+      <p>{date}</p>
+    </div>
+  );
+}
 
 export default function () {
   return (
